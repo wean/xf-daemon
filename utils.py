@@ -18,6 +18,7 @@ def get_module_path():
         else:
             module_path = os.path.dirname(os.path.abspath(__file__))
         return module_path
+
 def hexchar2bin(hex):
     arry= bytearray()
     for i in range(0, len(hex), 2):

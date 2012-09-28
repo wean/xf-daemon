@@ -2,142 +2,37 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
-import subprocess
-try:
-    import urllib as parse
-    import urllib2 as request
-    import cookielib as cookiejar
-except:
-    from urllib import parse,request
-    from http import cookiejar
 import random,time
-import json,os,sys,re,hashlib
+import json,os,sys,re
 import getopt
+
+import httpwrapper
 
 try:
     raw_input
 except:
     raw_input=input
-def _(string):
-    try:
-        return string.decode("u8")
-    except:
-        return string
-
-def _print(str):
-    print (_(str))
-def get_module_path():
-        if hasattr(sys, "frozen"):
-            module_path = os.path.dirname(sys.executable)
-        else:
-            module_path = os.path.dirname(os.path.abspath(__file__))
-        return module_path
-module_path=get_module_path()
-
-def hexchar2bin(hex):
-    arry= bytearray()
-    for i in range(0, len(hex), 2):
-        arry.append(int(hex[i:i+2],16))
-    return arry
-
-
-class LWPCookieJar(cookiejar.LWPCookieJar):
-    def save(self, filename=None, ignore_discard=False, ignore_expires=False,userinfo=None):
-        if filename is None:
-            if self.filename is not None: filename = self.filename
-            else: raise ValueError(MISSING_FILENAME_TEXT)
-
-        f = open(filename, "a+")
-        try:
-            if userinfo:
-                f.seek(0)
-                f.write("#LWP-Cookies-2.0\n")
-                f.write("#%s\n"%userinfo)
-            else:
-                f.seek(len(''.join(f.readlines()[:2])))
-            f.write(self.as_lwp_str(ignore_discard, ignore_expires))
-            truncate_pos = f.tell()
-            f.truncate(truncate_pos)
-        finally:
-            f.close()
-
-
 
 class XF:
     """
      Login QQ
     """
 
-    _player="totem"
-
     __cookiepath = '%s/cookie'%module_path
     __verifyimg  = '%s/verify.jpg'%module_path
     __RE=re.compile("(\d+) *([^\d ]+)?")
-    def __preprocess(self,password=None,verifycode=None,hashpasswd=None):
 
-        if not hashpasswd:
-            self.hashpasswd=self.__md5(password)
-
-        I=hexchar2bin(self.hashpasswd)
-        if sys.version_info >= (3,0):
-          H = self.__md5(I + bytes(verifycode[2],encoding="ISO-8859-1"))
-        else:
-          H = self.__md5(I + verifycode[2])
-        G = self.__md5(H + verifycode[1].upper())
-
-        return G
-        
-    def __md5(self,item):
-        if sys.version_info >= (3,0):
-            try:
-              item=item.encode("u8")
-            except:
-              pass
-        return hashlib.md5(item).hexdigest().upper()
+    __wrapper = httpwrapper.httpwrapper()
 
     def start(self):
-        self.cookieJar=LWPCookieJar(self.__cookiepath)
 
-        cookieload=False
+        self.__wrapper.start(self.__cookiepath)
 
-        if os.path.isfile(self.__cookiepath):
-            try:
-                self.cookieJar.load(ignore_discard=True, ignore_expires=True)
-                cookieload=True
-            except:
-                pass
-                
-
-        opener = request.build_opener(request.HTTPCookieProcessor(self.cookieJar))
-        opener.addheaders = [('User-Agent', 'Mozilla/5.0')]
-        request.install_opener(opener)
-        
-
-        if cookieload:
+        if self.__wrapper.cookieload:
             self.main()
         else:
             self.__Login(True)
-    def __request(self,url,data=None,savecookie=False):
-        """
-            请求url
-        """
-        if data:
-            data = parse.urlencode(data).encode('utf-8')
-            fp=request.urlopen(url,data)
-        else:
-            fp=request.urlopen(url)
-        try:
-            str = fp.read().decode('utf-8')
-        except UnicodeDecodeError:
-            str = fp.read()
-        if savecookie == True:
-            if hasattr(self,"pswd"):
-                self.cookieJar.save(ignore_discard=True, ignore_expires=True,userinfo="%s#%s"%(self.__qq,self.hashpasswd))
-            else:
-                self.cookieJar.save(ignore_discard=True, ignore_expires=True)
 
-        fp.close()
-        return str
     def __getverifycode(self):
 
         urlv = 'http://check.ptlogin2.qq.com/check?uin=%s&appid=567008010&r=%s'%(self.__qq,random.Random().random())

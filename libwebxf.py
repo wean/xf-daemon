@@ -4,6 +4,10 @@ import random,time
 import json,os,sys,re,hashlib
 import getopt
 
+from utils import _print
+from utils import _
+from utils import hexchar2bin
+
 class webxf:
     __cookiepath = '%s/cookie'%module_path
     __verifyimg  = '%s/verify.jpg'%module_path
@@ -21,7 +25,7 @@ class webxf:
         G = self.__md5(H + verifycode[1].upper())
 
         return G
-        
+
     def __getverifycode(self):
 
         urlv = 'http://check.ptlogin2.qq.com/check?uin=%s&appid=567008010&r=%s'%(self.__qq,random.Random().random())
@@ -42,9 +46,8 @@ class webxf:
             print("请输入验证码：")
             vf=raw_input("vf # ").strip()
             verify[1]=vf
-            
-        return verify
 
+        return verify
 
     def __request_login(self):
 
@@ -102,8 +105,6 @@ class webxf:
                 self.filehash = []
                 self.filemid = []
                 res['data'].sort(key=lambda x: x["file_name"])
-                _print ("\n===================离线任务列表====================")
-                _print ("序号\t大小\t进度\t文件名")
                 for num in range(len(res['data'])):
                     index=res['data'][num]
                     self.filename.append(index['file_name'].encode("u8"))
@@ -114,21 +115,6 @@ class webxf:
                         percent="-0"
                     else:
                         percent=str(index['comp_size']/size*100).split(".")[0]
-
-                    dw=["B","K","M","G"]
-                    for i in range(4):
-                        _dw=dw[i]
-                        if size>=1024:
-                            size=size/1024
-                        else:
-                            break
-                    size="%.1f%s"%(size,_dw)
-                    out="%d\t%s\t%s%%\t%s"%(num+1,size,percent,_(self.filename[num]))
-                    if num % 2==0:
-                        out="\033[47m%s\033[m"%out
-
-                    _print (out)
-                _print ("=======================END=========================\n")
 
     def __gethttp(self,filelist):
             """
@@ -145,28 +131,8 @@ class webxf:
                 self.filecom[num]=(re.search(r'\"com_cookie":\"(.+?)\"\,\"',str).group(1))
                 _print(self.filehttp[num])
                 _print(self.filecom[num])
-       
-    def __chosetask(self):
-        _print ("请选择操作,输入回车(Enter)下载任务\nA添加任务,O在线观看,D删除任务,R刷新离线任务列表")
-        inputs=raw_input("ct # ")
-        if inputs.upper()=="A":
-            self.__addtask()
-            self.main()
-        elif inputs.upper()=="D":
-            self.__deltask()
-            self.main()
-        elif inputs.upper()=="R":
-            self.main()
-        elif inputs.upper()=="O":
-            self.__online()
-            self.main()
-        else:
-            self.__getdownload()
-            self.main()
 
     def __getdownload(self):
-            _print ("请输入要下载的任务序号,数字之间用空格或其他字符分隔.\n输入A下载所有任务:")
-            _print ("(数字后跟p只打印下载命令而不下载，比如1p2p3)")
             target=raw_input("dl # ").strip()
             if target.upper()=="A":
                 lists=zip(range(1,len(self.filehash)+1) , ['']* len(self.filehash))
@@ -182,7 +148,6 @@ class webxf:
             self.__download(lists)
 
     def __deltask(self):
-        _print ("请输入要删除的任务序号,数字之间用空格,逗号或其他非数字字符号分割.\n输入A删除所有任务:")
         target=raw_input("dt # ").strip()
         if target.upper()=="A":
             lists=zip(range(1,len(self.filehash)+1) , ['']* len(self.filehash))
@@ -197,11 +162,8 @@ class webxf:
             num=int(i[0])-1
             data={'mids':self.filemid[num]}
             self.__request(urlv,data)
-        _print("任务删除完成")
-
                     
     def __addtask(self):
-        _print ("请输入下载地址:")
         url=raw_input()
         filename=self.getfilename_url(url)
         data={"down_link":url,\
@@ -211,27 +173,11 @@ class webxf:
         urlv="http://lixian.qq.com/handler/lixian/add_to_lixian.php"
         str = self.__request(urlv,data)
 
-    def __online(self):
-        _print("输入需要在线观看的任务序号")
-        num = int(raw_input())-1
-        self.__gethttp([(num+1,'')])
-        _print("正在缓冲，马上开始播放")
-        filename=_(self.filename[num])
-        cmd=['wget', '-c', '-O', filename, '--header', 'Cookie:FTN5K=%s'%self.filecom[num], self.filehttp[num]]
-
-        subprocess.Popen(cmd,cwd=_(self._downpath))
-        time.sleep(5)
-        cmd=[self._player, filename]
-        subprocess.Popen(cmd,cwd=_(self._downpath))
-
     def __download(self,lists):
         cmds=[]
-        _print(dir(lists))
-        _print ("开始下载。。。")
         for num in lists:
             num=int(num[0])-1
             cmd="aria2c -c -s10 -x10 --header 'Cookie:ptisp=edu; FTN5K=%s' '%s'"%(self.filecom[num],self.filehttp[num])
-            _print (cmd)
 
             if sys.version_info >= (3,0):
                 pass

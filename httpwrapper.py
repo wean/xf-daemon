@@ -32,15 +32,15 @@ class LWPCookieJar(cookiejar.LWPCookieJar):
 
 class httpwrapper:
 
-    def start(self):
-        self.cookieJar=LWPCookieJar(self.__cookiepath)
+    def start(self, cookirpath):
+        self.cookieJar=LWPCookieJar(cookiepath)
 
-        cookieload=False
+        self.cookieload=False
 
         if os.path.isfile(self.__cookiepath):
             try:
                 self.cookieJar.load(ignore_discard=True, ignore_expires=True)
-                cookieload=True
+                self.cookieload=True
             except:
                 pass
 
