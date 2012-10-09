@@ -3,6 +3,8 @@
 from __future__ import division
 
 import subprocess
+import os, re
+from utils import _print
 
 class XF:
     __RE=re.compile("(\d+) *([^\d ]+)?")

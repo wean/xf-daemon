@@ -32,7 +32,7 @@ class LWPCookieJar(cookiejar.LWPCookieJar):
 
 class httpwrapper:
 
-    def start(self, cookirpath):
+    def start(self, cookiepath):
         self.cookieJar=LWPCookieJar(cookiepath)
 
         self.cookieload=False
